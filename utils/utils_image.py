@@ -190,8 +190,11 @@ def imread_uint(path, n_channels=3):
     #  input: path
     # output: HxWx3(RGB or GGG), or HxWx1 (G)
     if n_channels == 1:
-        img = cv2.imread(path, 0)  # cv2.IMREAD_GRAYSCALE
+        img = cv2.imread(path, cv2.IMREAD_ANYDEPTH)  # use precision of 16/32 or 8 bits
         img = np.expand_dims(img, axis=2)  # HxWx1
+        # 10-bit to 8-bit image for the 5M dataset
+        img = np.right_shift(img, 2)
+        img = img.astype('uint8')
     elif n_channels == 3:
         img = cv2.imread(path, cv2.IMREAD_UNCHANGED)  # BGR or G
         if img.ndim == 2:

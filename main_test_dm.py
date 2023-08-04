@@ -55,11 +55,11 @@ def main():
     # ----------------------------------------
     parser = argparse.ArgumentParser()
     parser.add_argument('--method_name', type=str, default='EA', help='Bilinear or VNG or EA')
-    parser.add_argument('--testset_name', type=str, default='McM', help='McM or kodak or CBSD68 or urban100')
-    parser.add_argument('--need_degradation', type=bool, default=True, help='Data preprocessing')
+    parser.add_argument('--testset_name', type=str, default='McM', help='McM or kodak or CBSD68 or urban100 or 5M')
+    parser.add_argument('--need_degradation', type=bool, default=False, help='Data preprocessing')
     parser.add_argument('--show_img', type=bool, default=False, help='Show the mosaiced, demosaiced and GT images')
     parser.add_argument('--task_current', type=str, default='dm_model_zoo', help='dm_model_zoo')
-    parser.add_argument('--pattern', type=int, default=1, help='1 (RGGB) or 2 (GRBG) or 3 (GBRG) or 4 (BGGR)')
+    parser.add_argument('--pattern', type=int, default=2, help='1 (RGGB) or 2 (GRBG) or 3 (GBRG) or 4 (BGGR)')
     parser.add_argument('--n_channels', type=int, default=3, help='setting for color image')
     # parser.add_argument('--nc', type=int, default=72, help='channel number')
     parser.add_argument('--window_size', type=int, default=8, help='window size of Swin Transformer')
@@ -101,7 +101,7 @@ def main():
     util.mkdir(B_path)
 
     if H_path == L_path:
-        need_degradation = True
+        args.need_degradation = True
     logger_name = result_name
     utils_logger.logger_info(logger_name, log_path=os.path.join(E_path, logger_name+'.log'))
     logger = logging.getLogger(logger_name)
@@ -142,7 +142,7 @@ def main():
         # logger.info('{:->4d}--> {:>10s}'.format(idx+1, img_name+ext))
         img_L = util.imread_uint(img, n_channels=args.n_channels)
 
-        if need_degradation:  # degradation process
+        if args.need_degradation:  # degradation process
 #            img_L, h_border, w_border = util.image_padding(img_L, 16*4)
             img_L = util.modcrop(img_L, 16)
             img_L = util.mosaic_CFA_Bayer(img_L, args.pattern)
@@ -170,11 +170,11 @@ def main():
         # img_E = model(img_L)
 
         if args.method_name == 'VNG':
-            img_E = cv2.cvtColor(img_L, cv2.COLOR_BAYER_BG2RGB_VNG)  # VGN: Variable Number of Gradients
+            img_E = cv2.cvtColor(img_L, cv2.COLOR_BAYER_GB2RGB_VNG)  # VGN: Variable Number of Gradients
         elif args.method_name == 'EA':
-            img_E = cv2.cvtColor(img_L, cv2.COLOR_BAYER_BG2RGB_EA)  # EA: Edge-Aware Demosaicing
+            img_E = cv2.cvtColor(img_L, cv2.COLOR_BAYER_GB2RGB_EA)  # EA: Edge-Aware Demosaicing
         else:
-            img_E = cv2.cvtColor(img_L, cv2.COLOR_BAYER_BG2RGB)  # bilinear interpolation
+            img_E = cv2.cvtColor(img_L, cv2.COLOR_BAYER_GB2RGB)  # bilinear interpolation
 
         # img_E = util.tensor2uint(img_E)
 #        img_E = util.shave_two(img_E, h_border, w_border)
